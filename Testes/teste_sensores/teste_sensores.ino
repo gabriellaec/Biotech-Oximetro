@@ -1,8 +1,17 @@
 #include <Wire.h>
-#include <LiquidCrystal_I2C.h>
+#include "SSD1306Ascii.h"
+#include "SSD1306AsciiWire.h"
 #include "MAX30100_PulseOximeter.h"
 
-LiquidCrystal_I2C lcd(0x27,16,2);  // Configurando o endereco do LCD 16x2 para 0x27
+
+
+// 0X3C+SA0 - 0x3C or 0x3D
+#define I2C_ADDRESS 0x3C
+
+// Define proper RST_PIN if required.
+#define RST_PIN -1
+
+SSD1306AsciiWire oled;
 
 #define TEMPO_LEITURA_MS     1000
 
@@ -18,10 +27,23 @@ void onBeatDetected()
 }
 
 void setup()
-{
+{   
+    Wire.begin();
+    Wire.setClock(400000L);
+    
     Serial.begin(115200);
 
     Serial.print("Initializing pulse oximeter..");
+
+    #if RST_PIN >= 0
+    oled.begin(&Adafruit128x64, I2C_ADDRESS, RST_PIN);
+    #else // RST_PIN >= 0
+    oled.begin(&Adafruit128x64, I2C_ADDRESS);
+    #endif // RST_PIN >= 0
+  
+    oled.setFont(System5x7);
+    oled.clear();
+    oled.print("Initializing pulse\noximeter..");
 
     //Inicializa o Sensor MAX30100
     if (!pox.begin()) {
@@ -62,6 +84,7 @@ float movingAverage(float value) {
     cvalues += 1;
 
   return sum/cvalues;
+  
 }
 
 void loop()
@@ -85,11 +108,12 @@ void loop()
         
         tempo = millis();
 
-//        lcd.clear();
-//        lcd.setCursor(0,0);
-//        lcd.print("BPM:");
-//        lcd.setCursor(6,0);
-//        lcd.print(pox.getHeartRate());
+//      oled.clear();
+//       oled.setCursor(0,0);
+//       oled.print("BPM:");
+//        oled.setCursor(6,0);
+//        oled.print(pox.getHeartRate());
+//        delay(1000);
 //
 //        lcd.clear();
 //        lcd.setCursor(0,1);
