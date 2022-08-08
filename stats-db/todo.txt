@@ -1,5 +1,0 @@
-Disciplinas
-- DELETE
-- PUT - ON update cascade
-
-Notas
