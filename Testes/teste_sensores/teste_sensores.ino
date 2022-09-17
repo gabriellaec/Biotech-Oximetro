@@ -90,30 +90,34 @@ float movingAverage(float value) {
 void loop()
 {
     //Atualizacao dos dados do Sensor MAX30100
-    pox.update();
-
-    if (millis() - tempo < TEMPO_LEITURA_MS) 
-    {   
-        x = movingAverage(pox.getSpO2());
-        //Serial.println(abs(prev_x - x));
-        if(abs(prev_x - x) > 1){
-          Serial.print("Frequencia Cardiaca:");
-          Serial.print(pox.getHeartRate());
-          Serial.print("SpO2:");
-          Serial.print(x);
-          Serial.print(abs(prev_x - x));
-          Serial.println("%");
-          prev_x = x;
-        }
-        
-        tempo = millis();
-
-//      oled.clear();
-//       oled.setCursor(0,0);
-//       oled.print("BPM:");
-//        oled.setCursor(6,0);
-//        oled.print(pox.getHeartRate());
-//        delay(1000);
+    while (0 < Wire.available()){
+      pox.update();
+  
+      if (millis() - tempo < TEMPO_LEITURA_MS) 
+      {   
+          x = movingAverage(pox.getSpO2());
+          //Serial.println(abs(prev_x - x));
+          if(abs(prev_x - x) > 1){
+            Serial.print("Frequencia Cardiaca:");
+            Serial.print(pox.getHeartRate());
+            Serial.print("SpO2:");
+            Serial.print(x);
+            Serial.print(abs(prev_x - x));
+            Serial.println("%");
+            prev_x = x;
+          }
+          
+          tempo = millis();
+    }
+    while (0 < Wire.available()){
+        oled.clear();
+        oled.set2X();
+        oled.print("BPM:");
+        oled.print(pox.getHeartRate());
+        oled.print("\nO2%:");
+        oled.print(pox.getSpO2());
+        delay(1000);
+    }
 //
 //        lcd.clear();
 //        lcd.setCursor(0,1);
