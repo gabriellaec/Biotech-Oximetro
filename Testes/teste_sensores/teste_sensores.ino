@@ -3,7 +3,9 @@
 #include "SSD1306AsciiWire.h"
 #include "MAX30100_PulseOximeter.h"
 
+#define REPORTING_PERIOD_MS     1000
 
+uint32_t tsLastReport = 0;
 
 // 0X3C+SA0 - 0x3C or 0x3D
 #define I2C_ADDRESS 0x3C
@@ -90,39 +92,31 @@ float movingAverage(float value) {
 void loop()
 {
     //Atualizacao dos dados do Sensor MAX30100
-    while (0 < Wire.available()){
-      pox.update();
-  
-      if (millis() - tempo < TEMPO_LEITURA_MS) 
-      {   
-          x = movingAverage(pox.getSpO2());
-          //Serial.println(abs(prev_x - x));
-          if(abs(prev_x - x) > 1){
-            Serial.print("Frequencia Cardiaca:");
-            Serial.print(pox.getHeartRate());
-            Serial.print("SpO2:");
-            Serial.print(x);
-            Serial.print(abs(prev_x - x));
-            Serial.println("%");
-            prev_x = x;
-          }
-          
-          tempo = millis();
+    // Make sure to call update as fast as possible
+    pox.update();
+
+    // Asynchronously dump heart rate and oxidation levels to the serial
+    // For both, a value of 0 means "invalid"
+    if (millis() - tsLastReport > REPORTING_PERIOD_MS) {
+        Serial.print("Heart rate:");
+        Serial.print(pox.getHeartRate());
+        Serial.print("bpm / SpO2:");
+        Serial.print(pox.getSpO2());
+        Serial.println("%");
+
+        tsLastReport = millis();
     }
-    while (0 < Wire.available()){
-        oled.clear();
-        oled.set2X();
-        oled.print("BPM:");
-        oled.print(pox.getHeartRate());
-        oled.print("\nO2%:");
-        oled.print(pox.getSpO2());
-        delay(1000);
-    }
+      oled.clear();
+      oled.set2X();
+      oled.print("BPM:");
+      oled.print(pox.getHeartRate());
+      oled.print("\nO2%:");
+      oled.print(pox.getSpO2());
+      delay(1000);
 //
 //        lcd.clear();
 //        lcd.setCursor(0,1);
 //        lcd.print("SpO2:");
 //        lcd.setCursor(7,0);
 //        lcd.print(pox.getSpO2());
-    }
 }
