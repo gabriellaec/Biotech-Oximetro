@@ -6,6 +6,7 @@
 #define REPORTING_PERIOD_MS     1000
 
 uint32_t tsLastReport = 0;
+uint32_t lastRefresh = 0;
 
 // 0X3C+SA0 - 0x3C or 0x3D
 #define I2C_ADDRESS 0x3C
@@ -20,7 +21,6 @@ SSD1306AsciiWire oled;
 PulseOximeter pox;
 
 long int tempo = 0;
-float x, prev_x;
 
 // Callback (registered below) fired when a pulse is detected
 void onBeatDetected()
@@ -63,32 +63,6 @@ void setup()
     pox.setOnBeatDetectedCallback(onBeatDetected);
 }
 
-float movingAverage(float value) {
-  const byte nvalues = 100;             // Moving average window size
-
-  static byte current = 0;            // Index for current value
-  static byte cvalues = 0;            // Count of values read (<= nvalues)
-  static float sum = 0;               // Rolling sum
-  static float values[nvalues];
-
-  sum += value;
-
-  // If the window is full, adjust the sum by deleting the oldest value
-  if (cvalues == nvalues)
-    sum -= values[current];
-
-  values[current] = value;          // Replace the oldest with the latest
-
-  if (++current >= nvalues)
-    current = 0;
-
-  if (cvalues < nvalues)
-    cvalues += 1;
-
-  return sum/cvalues;
-  
-}
-
 void loop()
 {
     //Atualizacao dos dados do Sensor MAX30100
@@ -103,20 +77,12 @@ void loop()
         Serial.print("bpm / SpO2:");
         Serial.print(pox.getSpO2());
         Serial.println("%");
-
+        oled.clear();
+        oled.set2X();
+        oled.print("BPM:");
+        oled.print(pox.getHeartRate());
+        oled.print("\nO2%:");
+        oled.print(pox.getSpO2());
         tsLastReport = millis();
     }
-      oled.clear();
-      oled.set2X();
-      oled.print("BPM:");
-      oled.print(pox.getHeartRate());
-      oled.print("\nO2%:");
-      oled.print(pox.getSpO2());
-      delay(1000);
-//
-//        lcd.clear();
-//        lcd.setCursor(0,1);
-//        lcd.print("SpO2:");
-//        lcd.setCursor(7,0);
-//        lcd.print(pox.getSpO2());
 }
